@@ -3,6 +3,7 @@ package com.bibliotheque.gestionbibli;
 import com.bibliotheque.gestionbibli.entity.Book;
 import com.bibliotheque.gestionbibli.entity.ReadingStatus;
 import com.bibliotheque.gestionbibli.repository.BookRepository;
+import com.bibliotheque.gestionbibli.services.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -15,10 +16,10 @@ import java.util.Optional;
 public class GestionbibliApplication implements CommandLineRunner {
 
     /**
-     * @Aytowired = Spring donne une instance de BookRepository
+     * @Aytowired = Spring donne une instance de BookService
      */
     @Autowired
-    private BookRepository bookRepository;
+    private BookService bookService;
 
     public static void main(String[] args) {
         SpringApplication.run(GestionbibliApplication.class, args);
@@ -26,46 +27,46 @@ public class GestionbibliApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("DEBUT TEST");
+        System.out.println("\n=== TESTS BookService");
 
-        //Test 1 créer et sauvegarder un livre
-        System.out.println("\n 1. Création d'un livre");
-        Book livre1 = new Book("9782070360024","Le petit prince","Antoine de St exupery");
-        livre1.setGenre("Conte");
-        livre1.setPublicationYear(1943);
+        // Test 1: Ajout livre valide
+        try {
+            Book book1 = new Book();
+            book1.setIsbn("9782123456789");
+            book1.setTitle("Test Book 1");
+            book1.setAuthor("AAA");
 
-        Book livreSauvegarde = bookRepository.save(livre1);
-        System.out.println("Livre sauvegardé :" + livreSauvegarde);
-
-        //Test 2 récupérer tous les livres
-        System.out.println("\n 2. Liste de tout les livres");
-        List<Book> toutLeslivres = bookRepository.findAll();
-        System.out.println("Nombre de livre : " + toutLeslivres.size() );
-        for (Book livre : toutLeslivres) {
-            System.out.println(" - " + livre.getTitle() + " par " + livre.getAuthor() );
+            Book savedBook = bookService.addBook(book1);
+            System.out.println("Livre ajouté: " + savedBook.getTitle() +
+                    " (Status: " + savedBook.getReadingStatus() + ")");
+        } catch (Exception e) {
+            System.out.println("Erreur: " + e.getMessage());
         }
 
-        //Test 3 chercher un livre par Isbn
-        System.out.println("\n 3. Recherche par ISBN");
-        Optional<Book> livreTrouve = bookRepository.findByIsbn("9782070360024");
-        if (livreTrouve.isPresent()) {
-            System.out.println(" - " + livreTrouve.get().getTitle());
-        } else {
-            System.out.println("Livre non trouvé");
+        // Test 2: ISBN invalide (pas 13 chiffres)
+        try {
+            Book book2 = new Book();
+            book2.setIsbn("123"); // Trop court !
+            book2.setTitle("Test Book 2");
+
+            bookService.addBook(book2);
+        } catch (Exception e) {
+            System.out.println("Validation ISBN : " + e.getMessage());
         }
 
-        //Test 4 ajout d'un deuxième livre
-        System.out.println("\n 4. Ajout d'un deuxième livre");
-        Book livre2 = new Book("1234567891234","Titre","Moi");
-        livre2.setReadingStatus(ReadingStatus.READING);
-        bookRepository.save(livre2);
+        // Test 3: ISBN en doublon
+        try {
+            Book book3 = new Book();
+            book3.setIsbn("9782123456789");
+            book3.setTitle("Autre livre");
 
-        //Test 5 compter les livres
-        System.out.println("\n 5. Compter les livres");
-        long nbLivre = bookRepository.count();
-        System.out.println("Total des livres : " + nbLivre);
+            bookService.addBook(book3);
+        } catch (Exception e) {
+            System.out.println("Validation doublon : " + e.getMessage());
+        }
 
-        System.out.println("\n TESTS TERMINES");
+        // Test 4: Récupération de tous les livres
+        System.out.println("Total livres: " + bookService.getAllBooks().size());
     }
-
 }
+
