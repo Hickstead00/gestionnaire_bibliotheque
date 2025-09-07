@@ -61,6 +61,47 @@ public class BookService {
 
         return bookRepository.save(book);
     }
+
+    /**
+     * Récupère un livre via son isbn
+     * @param isbn : L'ISBN unique du livre
+     */
+    public Optional<Book> getBookByIsbn(String isbn) {
+        return bookRepository.findByIsbn(isbn);
+    }
+
+    /**
+     * Permet de supprimer un livre via son ISBN
+     * @param isbn : L'ISBN unique du livre
+     */
+    public boolean deleteBookByIsbn(String isbn) {
+        Optional<Book> existingBook = bookRepository.findByIsbn(isbn);
+
+        if (existingBook.isEmpty()){
+            throw new RuntimeException("Livre non trouvé avec l'ISBN : " + isbn);
+        }
+
+        bookRepository.delete(existingBook.get());
+        return true;
+    }
+
+    /**
+     * Permet d'update le statut de lecture du livre via les 3 enums
+     * @param isbn : ISBN unique du livre
+     * @param readingStatus : Enum disponible (TO_READ,READING,READ)
+     */
+    public Book updateReadingStatus(String isbn, ReadingStatus readingStatus) {
+        Optional<Book> existingBook = bookRepository.findByIsbn(isbn);
+
+        if (existingBook.isEmpty()){
+            throw new RuntimeException("Livre non trouvé avec l'ISBN : " + isbn);
+        }
+
+        Book book = existingBook.get();
+        book.setReadingStatus(readingStatus);
+
+        return bookRepository.save(book);
+    }
 }
 
 
